@@ -1,0 +1,180 @@
+<div class="document-upload-container">
+  <p-toast></p-toast>
+
+  <div class="page-header">
+    <h1>Document Management</h1>
+    <p class="subtitle">Upload and manage your onboarding documents</p>
+  </div>
+
+  <!-- Upload Section -->
+  <p-card class="mb-4 upload-card">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-upload"></i>
+        <h2>Upload Document</h2>
+      </div>
+    </ng-template>
+
+    <div class="upload-section">
+      <!-- Task Selection -->
+      <div class="field mb-4">
+        <label for="taskSelect" class="block mb-2 font-semibold">
+          <i class="pi pi-list"></i> Select Task
+        </label>
+        <p-select id="taskSelect" [options]="tasks" [(ngModel)]="selectedTask" (onChange)="onTaskSelect($event)"
+          optionLabel="label" placeholder="Choose a task to upload document for..." [loading]="loadingTasks"
+          [filter]="true" filterPlaceholder="Search tasks..." styleClass="w-full" appendTo="body">
+          <ng-template let-task pTemplate="item">
+            <div class="task-option">
+              <div class="task-title">{{ task.label }}</div>
+              <div class="task-meta">
+                <span class="task-status" [ngClass]="{
+                  'status-pending': task.status === 0,
+                  'status-progress': task.status === 1,
+                  'status-completed': task.status === 2
+                }">
+                  {{ task.status === 0 ? 'Pending' : task.status === 1 ? 'In Progress' : 'Completed' }}
+                </span>
+                <span *ngIf="task.isOverdue" class="task-overdue">
+                  <i class="pi pi-exclamation-triangle"></i> Overdue
+                </span>
+              </div>
+            </div>
+          </ng-template>
+        </p-select>
+        <small *ngIf="tasks.length === 0 && !loadingTasks" class="text-muted">
+          <i class="pi pi-info-circle"></i> No tasks available
+        </small>
+      </div>
+
+      <!-- Task Details (shown when task is selected) -->
+      <div *ngIf="selectedTask" class="task-details mb-4">
+        <div class="detail-card">
+          <h3><i class="pi pi-info-circle"></i> Task Details</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Due Date:</span>
+              <span class="detail-value">{{ selectedTask.dueDate | date: 'medium' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Status:</span>
+              <span class="detail-value">
+                <p-tag
+                  [value]="selectedTask.status === 0 ? 'Pending' : selectedTask.status === 1 ? 'In Progress' : 'Completed'"
+                  [severity]="selectedTask.status === 0 ? 'warn' : selectedTask.status === 1 ? 'info' : 'success'"></p-tag>
+              </span>
+            </div>
+          </div>
+          <div *ngIf="selectedTask.description" class="task-description">
+            <span class="detail-label">Description:</span>
+            <p>{{ selectedTask.description }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Upload -->
+      <div class="field mb-3">
+        <label class="block mb-2 font-semibold">
+          <i class="pi pi-file-pdf"></i> Select PDF File (Max 10MB)
+        </label>
+        <div class="upload-controls">
+          <p-fileUpload mode="basic" accept="application/pdf" [maxFileSize]="10000000" (onSelect)="onFileSelect($event)"
+            (onClear)="selectedFile = null" chooseLabel="Choose PDF" [auto]="false"
+            styleClass="upload-button"></p-fileUpload>
+          <p-button label="Upload Document" icon="pi pi-upload" [disabled]="!selectedFile || !taskId || uploading"
+            [loading]="uploading" (onClick)="uploadDocument()"></p-button>
+        </div>
+        <small *ngIf="selectedFile" class="file-info">
+          <i class="pi pi-check-circle"></i> Selected: {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})
+        </small>
+      </div>
+    </div>
+  </p-card>
+
+  <!-- Documents List -->
+  <p-card *ngIf="taskId">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h2>Task Documents</h2>
+      </div>
+    </ng-template>
+
+    <p-table [value]="documents" [loading]="loading" [paginator]="true" [rows]="10" styleClass="p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>File Name</th>
+          <th>File Size</th>
+          <th>Upload Date</th>
+          <th>Status</th>
+          <th>Version</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-document>
+        <tr>
+          <td>{{ document.originalFileName }}</td>
+          <td>{{ formatFileSize(document.fileSize) }}</td>
+          <td>{{ document.uploadDate | date: 'short' }}</td>
+          <td>
+            <p-tag [severity]="getStatusSeverity(document.status)" [value]="getStatusLabel(document.status)"></p-tag>
+          </td>
+          <td>{{ document.version }}</td>
+          <td>
+            <div class="action-buttons">
+              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info"
+                (onClick)="previewDocument(document)" pTooltip="Preview"></p-button>
+              <p-button *ngIf="isHR && (document.status === 0 || document.status === 'Pending')"
+                icon="pi pi-check-circle" [rounded]="true" [text]="true" severity="success"
+                (onClick)="openReviewDialog(document)" pTooltip="Review Document"></p-button>
+              <p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="success"
+                (onClick)="downloadDocument(document.id, document.originalFileName)" pTooltip="Download"></p-button>
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                (onClick)="deleteDocument(document.id)" pTooltip="Delete"></p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">No documents found for this task</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <!-- Review Document Dialog -->
+  <p-dialog [(visible)]="displayReviewDialog" [modal]="true" [style]="{ width: '600px' }" header="Review Document"
+    [draggable]="false" [resizable]="false">
+    <div *ngIf="selectedDocumentForReview" class="review-dialog">
+      <div class="field mb-3">
+        <label class="block mb-2">Document: {{ selectedDocumentForReview.originalFileName }}</label>
+      </div>
+
+      <div class="field mb-3">
+        <label class="block mb-2">Review Status *</label>
+        <p-select [(ngModel)]="reviewStatus" [options]="[
+            { label: 'Approve', value: 1 },
+            { label: 'Reject', value: 2 }
+          ]" optionLabel="label" optionValue="value" placeholder="Select Status" styleClass="w-full"></p-select>
+      </div>
+
+      <div class="field mb-3">
+        <label class="block mb-2">
+          Comments
+          <span *ngIf="reviewStatus === 2" class="text-danger">*</span>
+        </label>
+        <textarea pInputTextarea [(ngModel)]="reviewComments" rows="4" placeholder="Enter review comments..."
+          [class.p-invalid]="reviewStatus === 2 && !reviewComments.trim()" class="w-full"></textarea>
+        <small class="text-muted" *ngIf="reviewStatus === 2">
+          Comments are required when rejecting a document
+        </small>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button label="Cancel" icon="pi pi-times" [text]="true" (onClick)="displayReviewDialog = false"></p-button>
+      <p-button label="Submit Review" icon="pi pi-check" (onClick)="submitReview()"
+        [disabled]="reviewStatus === 0 || (reviewStatus === 2 && !reviewComments.trim())"></p-button>
+    </ng-template>
+  </p-dialog>
+</div>

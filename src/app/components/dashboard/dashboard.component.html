@@ -1,0 +1,192 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p>Welcome back, {{ currentUser?.firstName }} {{ currentUser?.lastName }}</p>
+    <p *ngIf="!currentUser" class="text-warning">⚠️ Not logged in. Please login to see data.</p>
+    <div *ngIf="statsError" class="error-message"
+      style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+      <strong>⚠️ Error Loading Statistics:</strong> {{ statsError }}
+      <br><small>Check backend logs for details. The endpoint `/api/Dashboard/stats` is returning a 500 error.</small>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid" *ngIf="!loading; else loadingTemplate">
+    <p-card>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #e3f2fd;">
+          <i class="pi pi-users" style="color: #2196f3;"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats?.totalEmployees || 0 }}</h3>
+          <p>Total Employees</p>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #fff3e0;">
+          <i class="pi pi-briefcase" style="color: #ff9800;"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats?.activeOnboarding || 0 }}</h3>
+          <p>Active Onboarding</p>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #e8f5e9;">
+          <i class="pi pi-check-circle" style="color: #4caf50;"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats?.completedOnboarding || 0 }}</h3>
+          <p>Completed</p>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #fce4ec;">
+          <i class="pi pi-clock" style="color: #e91e63;"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats?.pendingTasks || 0 }}</h3>
+          <p>Pending Tasks</p>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #ffebee;">
+          <i class="pi pi-exclamation-triangle" style="color: #f44336;"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats?.overdueTasks || 0 }}</h3>
+          <p>Overdue Tasks</p>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #f3e5f5;">
+          <i class="pi pi-file" style="color: #9c27b0;"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats?.totalDocuments || 0 }}</h3>
+          <p>Total Documents</p>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <ng-template #loadingTemplate>
+    <div class="stats-grid">
+      <p-card *ngFor="let i of [1,2,3,4,5,6]">
+        <p-skeleton height="100px"></p-skeleton>
+      </p-card>
+    </div>
+  </ng-template>
+
+  <!-- Admin Charts Section -->
+  <div *ngIf="isAdmin && !loading" class="charts-section mt-4">
+    <div class="charts-grid">
+      <p-card *ngIf="onboardingChartData">
+        <ng-template pTemplate="header">
+          <h3>Onboarding Progress per Employee</h3>
+        </ng-template>
+        <p-chart type="bar" [data]="onboardingChartData"
+          [options]="{responsive: true, maintainAspectRatio: false}"></p-chart>
+      </p-card>
+
+      <p-card *ngIf="taskCompletionChartData">
+        <ng-template pTemplate="header">
+          <h3>Completed vs Pending Tasks</h3>
+        </ng-template>
+        <p-chart type="doughnut" [data]="taskCompletionChartData"
+          [options]="{responsive: true, maintainAspectRatio: false}"></p-chart>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- Admin Alerts Section -->
+  <div *ngIf="isAdmin && !loading" class="alerts-section mt-4">
+    <div class="alerts-grid">
+      <p-card *ngIf="overdueTasks.length > 0">
+        <ng-template pTemplate="header">
+          <h3>⚠️ Overdue Tasks</h3>
+        </ng-template>
+        <ul class="alert-list">
+          <li *ngFor="let task of overdueTasks.slice(0, 5)">
+            <strong>{{ task.employeeName }}</strong> - {{ task.taskTitle }}
+            <br><small>Due: {{ task.dueDate | date:'short' }}</small>
+          </li>
+        </ul>
+      </p-card>
+
+      <p-card *ngIf="rejectedDocuments.length > 0">
+        <ng-template pTemplate="header">
+          <h3>❌ Rejected Documents</h3>
+        </ng-template>
+        <ul class="alert-list">
+          <li *ngFor="let doc of rejectedDocuments.slice(0, 5)">
+            <strong>{{ doc.employeeName }}</strong> - {{ doc.fileName }}
+            <br><small>Reason: {{ doc.rejectionReason || 'Invalid format' }}</small>
+          </li>
+        </ul>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- Employee Progress Table -->
+  <p-card class="mt-4" *ngIf="!loading">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h2>Employee Onboarding Progress</h2>
+        <div *ngIf="progressError" class="error-message"
+          style="background: #ffebee; color: #c62828; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
+          <strong>⚠️ Error:</strong> {{ progressError }}
+        </div>
+      </div>
+    </ng-template>
+    <p-table [value]="progress" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+      [rowsPerPageOptions]="[10, 25, 50]">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Employee Name</th>
+          <th>Total Tasks</th>
+          <th>Completed</th>
+          <th>Pending</th>
+          <th>Overdue</th>
+          <th>Progress</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-employee>
+        <tr>
+          <td>{{ employee.employeeName }}</td>
+          <td>{{ employee.totalTasks }}</td>
+          <td>{{ employee.completedTasks }}</td>
+          <td>{{ employee.pendingTasks }}</td>
+          <td>{{ employee.overdueTasks }}</td>
+          <td>
+            <div class="progress-container">
+              <p-progressBar [value]="employee.completionPercentage || 0"></p-progressBar>
+              <span class="progress-text">{{ employee.completionPercentage || 0 }}%</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">No employee progress data available</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>

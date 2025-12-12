@@ -1,0 +1,78 @@
+<div class="login-container">
+  <div class="login-wrapper">
+    <p-card styleClass="login-card">
+      <ng-template pTemplate="header">
+        <div class="login-header">
+          <h1>Employee Onboarding</h1>
+          <p>Sign in to your account</p>
+        </div>
+      </ng-template>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div *ngIf="errorMessage" class="mb-3">
+          <p-message severity="error" [text]="errorMessage"></p-message>
+        </div>
+
+        <div class="field mb-3">
+          <label for="email" class="block mb-2">Email</label>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            formControlName="email"
+            placeholder="Enter your email"
+            [class.ng-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+            class="w-full"
+          />
+          <small
+            *ngIf="loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched"
+            class="p-error block mt-1"
+          >
+            Email is required
+          </small>
+          <small
+            *ngIf="loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched"
+            class="p-error block mt-1"
+          >
+            Invalid email format
+          </small>
+        </div>
+
+        <div class="field mb-3">
+          <label for="password" class="block mb-2">Password</label>
+          <p-password
+            id="password"
+            formControlName="password"
+            placeholder="Enter your password"
+            [feedback]="false"
+            [toggleMask]="true"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+          ></p-password>
+          <small
+            *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched"
+            class="p-error block mt-1"
+          >
+            Password is required
+          </small>
+          <small
+            *ngIf="loginForm.get('password')?.hasError('minlength') && loginForm.get('password')?.touched"
+            class="p-error block mt-1"
+          >
+            Password must be at least 6 characters
+          </small>
+        </div>
+
+        <p-button
+          type="submit"
+          label="Login"
+          [disabled]="loginForm.invalid || isLoading"
+          [loading]="isLoading"
+          styleClass="w-full"
+          icon="pi pi-sign-in"
+        ></p-button>
+      </form>
+    </p-card>
+  </div>
+</div>
+

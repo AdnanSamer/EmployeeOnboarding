@@ -1,0 +1,150 @@
+<div class="employee-dashboard">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+        <p-card>
+            <p-skeleton height="200px" styleClass="mb-3"></p-skeleton>
+            <p-skeleton height="150px" styleClass="mb-3"></p-skeleton>
+            <p-skeleton height="150px"></p-skeleton>
+        </p-card>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="error-container">
+        <p-card>
+            <div class="error-message">
+                <i class="pi pi-exclamation-triangle"></i>
+                <h3>{{ error }}</h3>
+                <p-button label="Retry" icon="pi pi-refresh" (onClick)="loadDashboard()"></p-button>
+            </div>
+        </p-card>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div *ngIf="dashboardData && !loading" class="dashboard-content">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <h1>Welcome to Your Dashboard!</h1>
+            <p class="subtitle">Here's your onboarding progress</p>
+        </div>
+
+        <!-- Progress Card -->
+        <p-card class="progress-card">
+            <ng-template pTemplate="header">
+                <div class="card-header">
+                    <i class="pi pi-chart-line"></i>
+                    <h2>Onboarding Progress</h2>
+                </div>
+            </ng-template>
+
+            <div class="progress-content">
+                <div class="progress-stats">
+                    <div class="stat">
+                        <span class="stat-value">{{ dashboardData.onboardingProgress.completedTasks }}</span>
+                        <span class="stat-label">Completed</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ dashboardData.onboardingProgress.totalTasks }}</span>
+                        <span class="stat-label">Total Tasks</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ dashboardData.onboardingProgress.progressPercentage }}%</span>
+                        <span class="stat-label">Progress</span>
+                    </div>
+                </div>
+
+                <div class="progress-bar-container">
+                    <p-progressBar [value]="dashboardData.onboardingProgress.progressPercentage"
+                        [style]="{'height': '30px'}" [showValue]="true">
+                    </p-progressBar>
+                </div>
+            </div>
+        </p-card>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <p-card class="stat-card">
+                <div class="stat-content">
+                    <i class="pi pi-clock stat-icon pending"></i>
+                    <div class="stat-info">
+                        <span class="stat-number">{{ dashboardData.onboardingProgress.pendingTasks }}</span>
+                        <span class="stat-title">Pending Tasks</span>
+                    </div>
+                </div>
+            </p-card>
+
+            <p-card class="stat-card">
+                <div class="stat-content">
+                    <i class="pi pi-exclamation-circle stat-icon overdue"></i>
+                    <div class="stat-info">
+                        <span class="stat-number">{{ dashboardData.onboardingProgress.overdueTasks }}</span>
+                        <span class="stat-title">Overdue Tasks</span>
+                    </div>
+                </div>
+            </p-card>
+
+            <p-card class="stat-card">
+                <div class="stat-content">
+                    <i class="pi pi-file stat-icon documents"></i>
+                    <div class="stat-info">
+                        <span class="stat-number">{{ dashboardData.documentSummary.totalDocuments }}</span>
+                        <span class="stat-title">Documents</span>
+                    </div>
+                </div>
+            </p-card>
+        </div>
+
+        <!-- Upcoming Deadlines -->
+        <p-card class="deadlines-card"
+            *ngIf="dashboardData.upcomingDeadlines && dashboardData.upcomingDeadlines.length > 0">
+            <ng-template pTemplate="header">
+                <div class="card-header">
+                    <i class="pi pi-calendar"></i>
+                    <h2>Upcoming Deadlines</h2>
+                </div>
+            </ng-template>
+
+            <div class="deadlines-list">
+                <div *ngFor="let deadline of dashboardData.upcomingDeadlines" class="deadline-item">
+                    <div class="deadline-info">
+                        <h4>{{ deadline.taskTitle }}</h4>
+                        <p>{{ deadline.dueDate | date: 'medium' }}</p>
+                    </div>
+                    <p-tag [value]="deadline.daysRemaining + ' days'"
+                        [severity]="getDeadlineSeverity(deadline.daysRemaining)">
+                    </p-tag>
+                </div>
+            </div>
+        </p-card>
+
+        <!-- Recent Activity -->
+        <p-card class="activity-card" *ngIf="dashboardData.recentActivity && dashboardData.recentActivity.length > 0">
+            <ng-template pTemplate="header">
+                <div class="card-header">
+                    <i class="pi pi-history"></i>
+                    <h2>Recent Activity</h2>
+                </div>
+            </ng-template>
+
+            <div class="activity-list">
+                <div *ngFor="let activity of dashboardData.recentActivity" class="activity-item">
+                    <div class="activity-content">
+                        <h4>{{ activity.type }}</h4>
+                        <p>{{ activity.message }}</p>
+                        <small>{{ activity.date | date: 'short' }}</small>
+                    </div>
+                    <p-tag [value]="activity.type" [severity]="getSeverity(activity.severity)">
+                    </p-tag>
+                </div>
+            </div>
+        </p-card>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <p-button label="View My Tasks" icon="pi pi-list" routerLink="/my-tasks" styleClass="p-button-lg">
+            </p-button>
+            <p-button label="Upload Documents" icon="pi pi-upload" routerLink="/my-documents"
+                styleClass="p-button-lg p-button-outlined">
+            </p-button>
+        </div>
+    </div>
+</div>

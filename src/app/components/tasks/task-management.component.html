@@ -1,0 +1,161 @@
+<div class="task-management-container">
+  <p-toast></p-toast>
+
+  <div class="page-header">
+    <h1>Task Management</h1>
+    <p-button *ngIf="!employeeId" label="Assign Task" icon="pi pi-plus" (onClick)="openAssignDialog()"></p-button>
+  </div>
+
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h2>{{ employeeId ? 'My Tasks' : 'All Tasks' }}</h2>
+      </div>
+    </ng-template>
+
+    <p-table [value]="tasks" [loading]="loading" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+      [rowsPerPageOptions]="[10, 25, 50]" styleClass="p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Title</th>
+          <th *ngIf="!employeeId">Employee</th>
+          <th>Description</th>
+          <th>Due Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-task>
+        <tr [class.overdue]="task.isOverdue || isOverdue(task.dueDate)">
+          <td>
+            <div class="task-title-cell">
+              <span>{{ task.taskTemplateName || task.title || 'No title' }}</span>
+              <p-tag *ngIf="task.isOverdue" severity="danger" value="OVERDUE" icon="pi pi-exclamation-triangle"
+                styleClass="ml-2"></p-tag>
+              <p-tag
+                *ngIf="!task.isOverdue && task.daysUntilDue !== undefined && task.daysUntilDue <= 2 && task.daysUntilDue > 0"
+                severity="warn" [value]="'Due in ' + task.daysUntilDue + ' days'" icon="pi pi-clock"
+                styleClass="ml-2"></p-tag>
+            </div>
+          </td>
+          <td *ngIf="!employeeId">
+            <span class="employee-name">{{ task.employeeName || 'Unknown' }}</span>
+          </td>
+          <td>{{ task.taskDescription || task.description || 'No description' }}</td>
+          <td>{{ task.dueDate | date: 'short' }}</td>
+          <td>
+            <p-tag [severity]="getStatusSeverity(task.status)" [value]="getStatusLabel(task.status)"></p-tag>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                (onClick)="openStatusDialog(task)" pTooltip="Update Status"></p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="text-center">No tasks found</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <!-- Assign Task Dialog -->
+  <p-dialog [(visible)]="displayAssignDialog" [modal]="true" [style]="{ width: '600px' }"
+    header="Assign Task to Employee" [draggable]="false" [resizable]="false">
+    <div class="dialog-content">
+      <!-- Employee Selection -->
+      <div class="field mb-3">
+        <label for="employee" class="block mb-2 font-semibold">
+          <i class="pi pi-user"></i> Employee *
+        </label>
+        <p-select id="employee" [options]="employees" [(ngModel)]="selectedEmployee" (onChange)="onEmployeeChange()"
+          optionLabel="label" placeholder="Select Employee..." [filter]="true" filterPlaceholder="Search employees..."
+          styleClass="w-full" appendTo="body"></p-select>
+      </div>
+
+      <!-- Task Template Selection -->
+      <div class="field mb-3">
+        <label for="template" class="block mb-2 font-semibold">
+          <i class="pi pi-list"></i> Task Template *
+        </label>
+        <p-select id="template" [options]="taskTemplates" [(ngModel)]="selectedTaskTemplate"
+          (onChange)="onTaskTemplateChange()" optionLabel="title" placeholder="Select Task Template..." [filter]="true"
+          filterPlaceholder="Search templates..." styleClass="w-full" appendTo="body">
+          <ng-template let-template pTemplate="item">
+            <div class="template-option">
+              <div class="template-title">{{ template.title }}</div>
+              <small class="template-desc">{{ template.description }}</small>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <!-- Task Details (auto-filled from template) -->
+      <div *ngIf="selectedTaskTemplate" class="task-preview mb-3">
+        <div class="preview-card">
+          <h4><i class="pi pi-info-circle"></i> Task Details</h4>
+          <p><strong>Template:</strong> {{ selectedTaskTemplate.title }}</p>
+        </div>
+      </div>
+
+      <!-- Task Title (editable) -->
+      <div class="field mb-3">
+        <label for="taskTitle" class="block mb-2 font-semibold">
+          <i class="pi pi-tag"></i> Task Title *
+        </label>
+        <input id="taskTitle" type="text" pInputText [(ngModel)]="newTask.title" placeholder="Enter task title..."
+          class="w-full" />
+      </div>
+
+      <!-- Task Description (editable) -->
+      <div class="field mb-3">
+        <label for="taskDescription" class="block mb-2 font-semibold">
+          <i class="pi pi-align-left"></i> Description *
+        </label>
+        <textarea id="taskDescription" pTextarea [(ngModel)]="newTask.description"
+          placeholder="Enter task description..." rows="3" class="w-full"></textarea>
+      </div>
+
+      <!-- Due Date -->
+      <div class="field mb-3">
+        <label for="dueDate" class="block mb-2 font-semibold">
+          <i class="pi pi-calendar"></i> Due Date *
+        </label>
+        <p-datepicker id="dueDate" [(ngModel)]="newTask.dueDate" [showTime]="true" [showIcon]="true"
+          dateFormat="yy-mm-dd" styleClass="w-full" placeholder="Select due date..."></p-datepicker>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button label="Cancel" icon="pi pi-times" [text]="true" (onClick)="displayAssignDialog = false"></p-button>
+      <p-button label="Assign" icon="pi pi-check" (onClick)="assignTask()"></p-button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Update Status Dialog -->
+  <p-dialog [(visible)]="displayStatusDialog" [modal]="true" [style]="{ width: '500px' }" header="Update Task Status"
+    [draggable]="false" [resizable]="false">
+    <div *ngIf="selectedTask" class="dialog-content">
+      <div class="task-info mb-3">
+        <h3>{{ selectedTask.title }}</h3>
+        <p>{{ selectedTask.description }}</p>
+        <p><strong>Due Date:</strong> {{ selectedTask.dueDate | date: 'full' }}</p>
+      </div>
+
+      <div class="field mb-3">
+        <label for="status" class="block mb-2">Status</label>
+        <p-select id="status" [options]="statusOptions" [(ngModel)]="selectedTask.status" optionLabel="label"
+          optionValue="value" styleClass="w-full" appendTo="body"></p-select>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button label="Cancel" icon="pi pi-times" [text]="true" (onClick)="displayStatusDialog = false"></p-button>
+      <p-button label="Update" icon="pi pi-check" (onClick)="updateTaskStatus()"></p-button>
+    </ng-template>
+  </p-dialog>
+</div>

@@ -1,0 +1,135 @@
+<div class="employee-list-container">
+  <p-toast></p-toast>
+
+  <div class="page-header">
+    <h1>Employees</h1>
+    <p-button label="Add Employee" icon="pi pi-plus" routerLink="/employees/new" severity="success"></p-button>
+  </div>
+
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h2>Employee Management</h2>
+      </div>
+    </ng-template>
+
+    <!-- Filters -->
+    <div class="filters mb-4">
+      <div class="filter-row">
+        <div class="field">
+          <label for="department" class="block mb-2">Department</label>
+          <p-select id="department" [options]="departments" [(ngModel)]="filter.department" optionLabel="label"
+            optionValue="value" placeholder="Select Department" (onChange)="onFilterChange()"
+            styleClass="w-full"></p-select>
+        </div>
+
+        <div class="field">
+          <label for="employmentStatus" class="block mb-2">Employment Status</label>
+          <p-select id="employmentStatus" [options]="employmentStatuses" [(ngModel)]="filter.employmentStatus"
+            optionLabel="label" optionValue="value" placeholder="Select Status" (onChange)="onFilterChange()"
+            styleClass="w-full"></p-select>
+        </div>
+
+        <div class="field">
+          <label for="onboardingStatus" class="block mb-2">Onboarding Status</label>
+          <p-select id="onboardingStatus" [options]="onboardingStatuses" [(ngModel)]="filter.onboardingStatus"
+            optionLabel="label" optionValue="value" placeholder="Select Onboarding" (onChange)="onFilterChange()"
+            styleClass="w-full"></p-select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employee Table -->
+    <p-table [value]="employees" [loading]="loading" [paginator]="true" [rows]="filter.pageSize"
+      [totalRecords]="totalRecords" [lazy]="true" (onLazyLoad)="onPageChange($event)" [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+      [rowsPerPageOptions]="[10, 25, 50]" styleClass="p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Department</th>
+          <th>Hire Date</th>
+          <th>Employment Status</th>
+          <th>Onboarding Status</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-employee>
+        <tr>
+          <td>{{ employee.firstName }} {{ employee.lastName }}</td>
+          <td>{{ employee.email }}</td>
+          <td>{{ employee.department }}</td>
+          <td>{{ employee.hireDate | date: 'short' }}</td>
+          <td>
+            <p-tag [severity]="getEmploymentStatusSeverity(employee.employmentStatus)"
+              [value]="getEmploymentStatusLabel(employee.employmentStatus)"></p-tag>
+          </td>
+          <td>
+            <p-tag [severity]="getOnboardingStatusSeverity(employee.onboardingStatus)"
+              [value]="getOnboardingStatusLabel(employee.onboardingStatus)"></p-tag>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info"
+                [routerLink]="['/employees', employee.id]" pTooltip="View Details"></p-button>
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="warn"
+                [routerLink]="['/employees', employee.id, 'edit']" pTooltip="Edit Employee"></p-button>
+              <p-button icon="pi pi-calendar-plus" [rounded]="true" [text]="true" severity="success"
+                (onClick)="assignTask(employee)" pTooltip="Assign Task"></p-button>
+              <p-button *ngIf="employee.onboardingStatus !== 2" icon="pi pi-check" [rounded]="true" [text]="true"
+                severity="success" (onClick)="completeOnboarding(employee.id)"
+                pTooltip="Complete Onboarding"></p-button>
+              <p-button *ngIf="employee.employmentStatus === 0" icon="pi pi-times-circle" [rounded]="true" [text]="true"
+                severity="danger" (onClick)="deactivateEmployee(employee.id)" pTooltip="Deactivate Employee"></p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">No employees found</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <!-- Employee Detail Dialog -->
+  <p-dialog [(visible)]="displayDialog" [modal]="true" [style]="{ width: '600px' }" header="Employee Details"
+    [draggable]="false" [resizable]="false">
+    @if (selectedEmployee) {
+    <div class="employee-details">
+      <div class="detail-row">
+        <strong>Name:</strong>
+        <span>{{ selectedEmployee.firstName }} {{ selectedEmployee.lastName }}</span>
+      </div>
+      <div class="detail-row">
+        <strong>Email:</strong>
+        <span>{{ selectedEmployee.email }}</span>
+      </div>
+      <div class="detail-row">
+        <strong>Department:</strong>
+        <span>{{ selectedEmployee.department }}</span>
+      </div>
+      <div class="detail-row">
+        <strong>Hire Date:</strong>
+        <span>{{ selectedEmployee.hireDate | date: 'full' }}</span>
+      </div>
+      <div class="detail-row">
+        <strong>Employment Status:</strong>
+        <p-tag [severity]="getEmploymentStatusSeverity(selectedEmployee.employmentStatus)"
+          [value]="getEmploymentStatusLabel(selectedEmployee.employmentStatus)"></p-tag>
+      </div>
+      <div class="detail-row">
+        <strong>Onboarding Status:</strong>
+        <p-tag [severity]="getOnboardingStatusSeverity(selectedEmployee.onboardingStatus)"
+          [value]="getOnboardingStatusLabel(selectedEmployee.onboardingStatus)"></p-tag>
+      </div>
+    </div>
+    }
+  </p-dialog>
+
+  <!-- Assign Task Modal -->
+  <app-assign-task-modal [(visible)]="showAssignTaskModal" [selectedEmployeeId]="selectedEmployeeForTask"
+    (taskAssigned)="onTaskAssigned()"></app-assign-task-modal>
+</div>

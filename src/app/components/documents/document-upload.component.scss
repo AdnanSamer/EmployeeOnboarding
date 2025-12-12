@@ -1,0 +1,281 @@
+.document-upload-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .subtitle {
+    margin: 0;
+    font-size: 1rem;
+    color: #666;
+  }
+}
+
+.upload-card {
+  ::ng-deep .p-card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+  }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  i {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+}
+
+.upload-section {
+  .field {
+    label {
+      font-weight: 600;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i {
+        color: #667eea;
+      }
+    }
+  }
+
+  .upload-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  color: #10b981;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  i {
+    color: #10b981;
+  }
+}
+
+.text-muted {
+  color: #999;
+  font-style: italic;
+}
+
+// Task dropdown custom styling
+.task-option {
+  padding: 0.5rem 0;
+
+  .task-title {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.25rem;
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+
+    .task-status {
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+
+      &.status-pending {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      &.status-progress {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      &.status-completed {
+        background: #d1fae5;
+        color: #065f46;
+      }
+    }
+
+    .task-overdue {
+      color: #dc2626;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+  }
+}
+
+// Task details card
+.task-details {
+  .detail-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 8px;
+    padding: 1.5rem;
+    border-left: 4px solid #667eea;
+
+    h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1.1rem;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i {
+        color: #667eea;
+      }
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      .detail-label {
+        font-size: 0.85rem;
+        color: #666;
+        font-weight: 600;
+      }
+
+      .detail-value {
+        font-size: 1rem;
+        color: #333;
+        font-weight: 500;
+      }
+    }
+
+    .task-description {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+
+      .detail-label {
+        font-size: 0.85rem;
+        color: #666;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        margin: 0;
+        color: #333;
+        line-height: 1.6;
+      }
+    }
+  }
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mb-4 {
+  margin-bottom: 2rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.block {
+  display: block;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.text-center {
+  text-align: center;
+  padding: 2rem;
+  color: #999;
+}
+
+.pdf-preview-container {
+  width: 100%;
+  height: calc(90vh - 120px);
+  overflow: hidden;
+}
+
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+::ng-deep .p-card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+::ng-deep .p-card-body {
+  padding: 1.5rem;
+}
+
+::ng-deep .p-dialog-content {
+  padding: 1rem;
+  overflow: hidden;
+}
+
+::ng-deep .upload-button .p-button {
+  width: 100%;
+  justify-content: center;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .document-upload-container {
+    padding: 1rem;
+  }
+
+  .task-details .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

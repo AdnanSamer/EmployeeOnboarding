@@ -1,0 +1,187 @@
+<div class="employee-summary">
+    <div class="page-header">
+        <h1>Onboarding Summary</h1>
+        <p class="subtitle">Your complete onboarding journey</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="summary-content">
+        <p-card>
+            <p-skeleton height="200px"></p-skeleton>
+        </p-card>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="error-state">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p>{{ error }}</p>
+        <p-button label="Retry" icon="pi pi-refresh" (onClick)="loadSummary()"></p-button>
+    </div>
+
+    <!-- Summary Content -->
+    <div *ngIf="summary && !loading" class="summary-content">
+
+        <!-- Employee Info Card -->
+        <p-card class="info-card">
+            <div class="employee-info">
+                <div class="info-item">
+                    <i class="pi pi-user"></i>
+                    <div>
+                        <span class="label">Employee Name</span>
+                        <span class="value">{{ summary.employee.name }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="pi pi-envelope"></i>
+                    <div>
+                        <span class="label">Email</span>
+                        <span class="value">{{ summary.employee.email }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="pi pi-briefcase"></i>
+                    <div>
+                        <span class="label">Department</span>
+                        <span class="value">{{ summary.employee.department }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="pi pi-id-card"></i>
+                    <div>
+                        <span class="label">Position</span>
+                        <span class="value">{{ summary.employee.position }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="pi pi-calendar"></i>
+                    <div>
+                        <span class="label">Hire Date</span>
+                        <span class="value">{{ summary.employee.hireDate | date:'mediumDate' }}</span>
+                    </div>
+                </div>
+            </div>
+        </p-card>
+
+        <!-- Progress Card -->
+        <p-card class="progress-card">
+            <ng-template pTemplate="header">
+                <div class="card-header">
+                    <i class="pi pi-chart-line"></i>
+                    <span>Onboarding Progress</span>
+                </div>
+            </ng-template>
+
+            <div class="progress-section">
+                <div class="progress-stats">
+                    <div class="stat">
+                        <span class="stat-value">{{ summary.onboardingProgress.progressPercentage }}%</span>
+                        <span class="stat-label">Complete</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ summary.onboardingProgress.daysElapsed }}</span>
+                        <span class="stat-label">Days Elapsed</span>
+                    </div>
+                    <div class="stat">
+                        <p-tag [severity]="getStatusSeverity(summary.onboardingProgress.status)"
+                            [value]="summary.onboardingProgress.status"></p-tag>
+                    </div>
+                </div>
+                <p-progressBar [value]="summary.onboardingProgress.progressPercentage" [showValue]="false"
+                    [style]="{'height': '12px', 'margin-top': '1rem'}"></p-progressBar>
+                <div class="date-info">
+                    <span><i class="pi pi-calendar"></i> Started: {{ summary.onboardingProgress.startDate |
+                        date:'mediumDate' }}</span>
+                    <span *ngIf="summary.onboardingProgress.completionDate">
+                        <i class="pi pi-check-circle"></i> Completed: {{ summary.onboardingProgress.completionDate |
+                        date:'mediumDate' }}
+                    </span>
+                </div>
+            </div>
+        </p-card>
+
+        <!-- Tasks Breakdown -->
+        <p-card class="tasks-card">
+            <ng-template pTemplate="header">
+                <div class="card-header">
+                    <i class="pi pi-list-check"></i>
+                    <span>Tasks Breakdown</span>
+                </div>
+            </ng-template>
+
+            <div class="tasks-list">
+                <div *ngFor="let task of summary.tasks" class="task-item">
+                    <div class="task-header">
+                        <div class="task-info">
+                            <h4>{{ task.title }}</h4>
+                            <p-tag [severity]="getStatusSeverity(task.status)" [value]="task.status"></p-tag>
+                        </div>
+                        <div class="task-dates">
+                            <span class="due-date">
+                                <i class="pi pi-calendar"></i>
+                                Due: {{ task.dueDate | date:'mediumDate' }}
+                            </span>
+                            <span *ngIf="task.completedDate" class="completed-date">
+                                <i class="pi pi-check"></i>
+                                Completed: {{ task.completedDate | date:'mediumDate' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div *ngIf="task.documents && task.documents.length > 0" class="task-documents">
+                        <h5>Documents:</h5>
+                        <div *ngFor="let doc of task.documents" class="document-item">
+                            <i class="pi pi-file-pdf"></i>
+                            <span class="doc-name">{{ doc.fileName }}</span>
+                            <p-tag [severity]="getDocumentStatusSeverity(doc.status)" [value]="doc.status"></p-tag>
+                            <span *ngIf="doc.reviewComments" class="doc-comments">
+                                <i class="pi pi-comment"></i>
+                                {{ doc.reviewComments }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div *ngIf="summary.tasks.length === 0" class="empty-state">
+                    <i class="pi pi-inbox"></i>
+                    <p>No tasks assigned yet</p>
+                </div>
+            </div>
+        </p-card>
+
+        <!-- Timeline -->
+        <p-card class="timeline-card">
+            <ng-template pTemplate="header">
+                <div class="card-header">
+                    <i class="pi pi-history"></i>
+                    <span>Onboarding Timeline</span>
+                </div>
+            </ng-template>
+
+            <p-timeline [value]="summary.timeline" align="left">
+                <ng-template pTemplate="marker" let-event>
+                    <span class="timeline-marker" [style.background-color]="getTimelineColor(event.type)">
+                        <i [class]="'pi ' + getTimelineIcon(event.type)"></i>
+                    </span>
+                </ng-template>
+                <ng-template pTemplate="content" let-event>
+                    <div class="timeline-content">
+                        <span class="timeline-date">{{ event.date | date:'mediumDate' }}</span>
+                        <span class="timeline-event">{{ event.event }}</span>
+                    </div>
+                </ng-template>
+            </p-timeline>
+
+            <div *ngIf="summary.timeline.length === 0" class="empty-state">
+                <i class="pi pi-clock"></i>
+                <p>No timeline events yet</p>
+            </div>
+        </p-card>
+
+        <!-- Download Button -->
+        <div class="download-section">
+            <p-button label="Download PDF Summary" icon="pi pi-download" severity="secondary" size="large"
+                (onClick)="downloadPDF()"></p-button>
+        </div>
+
+    </div>
+</div>
