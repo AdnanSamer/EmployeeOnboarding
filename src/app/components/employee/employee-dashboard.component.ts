@@ -7,6 +7,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
+import { SplitCamelCasePipe } from '../../shared/pipes/split-camel-case.pipe';
 
 @Component({
     selector: 'app-employee-dashboard',
@@ -18,7 +19,8 @@ import { SkeletonModule } from 'primeng/skeleton';
         ProgressBarModule,
         TagModule,
         ButtonModule,
-        SkeletonModule
+        SkeletonModule,
+        SplitCamelCasePipe
     ],
     templateUrl: './employee-dashboard.component.html',
     styleUrl: './employee-dashboard.component.scss'

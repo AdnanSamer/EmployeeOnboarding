@@ -234,6 +234,31 @@
                             font-size: 0.9rem;
                         }
 
+                        .activity-comments {
+                            display: inline-flex;
+                            align-items: flex-start;
+                            gap: 0.5rem;
+                            margin-top: 0.5rem;
+                            padding: 0.5rem;
+                            background: #f0f9ff;
+                            border-left: 3px solid #3b82f6;
+                            border-radius: 4px;
+                            font-size: 0.85rem;
+                            width: fit-content;
+                            max-width: 100%;
+
+                            i {
+                                color: #3b82f6;
+                                margin-top: 0.1rem;
+                                flex-shrink: 0;
+                            }
+
+                            span {
+                                color: #1e40af;
+                                line-height: 1.4;
+                            }
+                        }
+
                         small {
                             color: #999;
                             font-size: 0.85rem;

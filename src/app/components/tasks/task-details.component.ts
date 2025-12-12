@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { TaskService } from '../../services/task.service';
 import { DocumentService } from '../../services/document.service';
 import { AuthService } from '../../services/auth.service';
@@ -10,6 +11,9 @@ import { TagModule } from 'primeng/tag';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { ReopenTaskModalComponent } from '../../shared/components/reopen-task-modal.component';
 
@@ -19,12 +23,16 @@ import { ReopenTaskModalComponent } from '../../shared/components/reopen-task-mo
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
     CardModule,
     ButtonModule,
     TagModule,
     SelectModule,
     TableModule,
     ToastModule,
+    DialogModule,
+    InputTextModule,
+    TooltipModule,
     ReopenTaskModalComponent
   ],
   providers: [MessageService],
@@ -150,41 +158,68 @@ import { ReopenTaskModalComponent } from '../../shared/components/reopen-task-mo
         </ng-template>
 
         <!-- Documents List -->
-        <p-table [value]="documents" [loading]="loadingDocuments">
+        <p-table [value]="documents" [loading]="loadingDocuments" [paginator]="true" [rows]="10" styleClass="p-datatable-striped">
           <ng-template pTemplate="header">
             <tr>
               <th>File Name</th>
+              <th>File Size</th>
               <th>Upload Date</th>
-              <th>Version</th>
               <th>Status</th>
+              <th>Version</th>
+              <th>Review Comments</th>
               <th>Actions</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-doc>
             <tr>
               <td>{{ doc.originalFileName }}</td>
+              <td>{{ formatFileSize(doc.fileSize) }}</td>
               <td>{{ doc.uploadDate | date: 'short' }}</td>
-              <td>v{{ doc.version }}</td>
               <td>
-                <p-tag [severity]="getDocStatusSeverity(doc.status)">
-                  {{ getDocStatusLabel(doc.status) }}
-                </p-tag>
+                <p-tag [severity]="getDocStatusSeverity(doc.status)" [value]="getDocStatusLabel(doc.status)"></p-tag>
+              </td>
+              <td>{{ doc.version }}</td>
+              <td>
+                <div *ngIf="doc.reviewComments" class="review-comments">
+                  <i class="pi pi-comment"></i>
+                  <span>{{ doc.reviewComments }}</span>
+                </div>
+                <span *ngIf="!doc.reviewComments" class="text-muted">-</span>
               </td>
               <td>
                 <div class="action-buttons">
                   <p-button
                     icon="pi pi-eye"
+                    [rounded]="true"
                     [text]="true"
                     severity="info"
                     (onClick)="previewDocument(doc)"
                     pTooltip="Preview"
                   ></p-button>
                   <p-button
-                    icon="pi pi-download"
+                    *ngIf="isHR && (doc.status === 0 || doc.status === 'Pending')"
+                    icon="pi pi-check-circle"
+                    [rounded]="true"
                     [text]="true"
                     severity="success"
-                    (onClick)="downloadDocument(doc.id)"
+                    (onClick)="openReviewDialog(doc)"
+                    pTooltip="Review Document"
+                  ></p-button>
+                  <p-button
+                    icon="pi pi-download"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="success"
+                    (onClick)="downloadDocument(doc.id, doc.originalFileName)"
                     pTooltip="Download"
+                  ></p-button>
+                  <p-button
+                    icon="pi pi-trash"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="danger"
+                    (onClick)="deleteDocument(doc.id)"
+                    pTooltip="Delete"
                   ></p-button>
                 </div>
               </td>
@@ -192,12 +227,48 @@ import { ReopenTaskModalComponent } from '../../shared/components/reopen-task-mo
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="5" class="text-center">No documents uploaded</td>
+              <td colspan="7" class="text-center">No documents uploaded for this task</td>
             </tr>
           </ng-template>
         </p-table>
       </p-card>
     </div>
+
+    <!-- Review Document Dialog -->
+    <p-dialog [(visible)]="displayReviewDialog" [modal]="true" [style]="{ width: '600px' }" header="Review Document"
+      [draggable]="false" [resizable]="false">
+      <div *ngIf="selectedDocumentForReview" class="review-dialog">
+        <div class="field mb-3">
+          <label class="block mb-2">Document: {{ selectedDocumentForReview.originalFileName }}</label>
+        </div>
+
+        <div class="field mb-3">
+          <label class="block mb-2">Review Status *</label>
+          <p-select [(ngModel)]="reviewStatus" [options]="[
+              { label: 'Approve', value: 1 },
+              { label: 'Reject', value: 2 }
+            ]" optionLabel="label" optionValue="value" placeholder="Select Status" styleClass="w-full"></p-select>
+        </div>
+
+        <div class="field mb-3">
+          <label class="block mb-2">
+            Comments
+            <span *ngIf="reviewStatus === 2" class="text-danger">*</span>
+          </label>
+          <textarea pInputTextarea [(ngModel)]="reviewComments" rows="4" placeholder="Enter review comments..."
+            [class.p-invalid]="reviewStatus === 2 && !reviewComments.trim()" class="w-full"></textarea>
+          <small class="text-muted" *ngIf="reviewStatus === 2">
+            Comments are required when rejecting a document
+          </small>
+        </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <p-button label="Cancel" icon="pi pi-times" [text]="true" (onClick)="displayReviewDialog = false"></p-button>
+        <p-button label="Submit Review" icon="pi pi-check" (onClick)="submitReview()"
+          [disabled]="reviewStatus === 0 || (reviewStatus === 2 && !reviewComments.trim())"></p-button>
+      </ng-template>
+    </p-dialog>
 
     <!-- Reopen Task Modal -->
     <app-reopen-task-modal
@@ -233,7 +304,62 @@ import { ReopenTaskModalComponent } from '../../shared/components/reopen-task-mo
       }
     }
 
-    .card-header {
+    .review-comments {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: #f0f9ff;
+      border-left: 3px solid #3b82f6;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      width: fit-content;
+      max-width: 100%;
+
+      i {
+        color: #3b82f6;
+        margin-top: 0.2rem;
+        flex-shrink: 0;
+      }
+
+      span {
+        color: #1e40af;
+        line-height: 1.4;
+      }
+    }
+
+    .text-muted {
+      color: #999;
+      font-style: italic;
+    }
+
+    .text-danger {
+      color: #ef4444;
+    }
+
+    .review-dialog {
+      .field {
+        margin-bottom: 1rem;
+      }
+
+      .block {
+        display: block;
+      }
+
+      .mb-2 {
+        margin-bottom: 0.5rem;
+      }
+
+      .mb-3 {
+        margin-bottom: 1rem;
+      }
+
+      .w-full {
+        width: 100%;
+      }
+    }
+
+    a {
       padding: 1rem;
 
       h2 {
@@ -351,6 +477,10 @@ export class TaskDetailsComponent implements OnInit {
   loadingDocuments = false;
   showReopenModal = false;
   isHR = false;
+  displayReviewDialog = false;
+  selectedDocumentForReview: any = null;
+  reviewStatus = 0;
+  reviewComments = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -454,13 +584,13 @@ export class TaskDetailsComponent implements OnInit {
     });
   }
 
-  downloadDocument(docId: number): void {
+  downloadDocument(docId: number, fileName: string): void {
     this.documentService.downloadDocument(docId).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `document_${docId}.pdf`;
+        link.download = fileName || `document_${docId}.pdf`;
         link.click();
         window.URL.revokeObjectURL(url);
       },
@@ -469,6 +599,96 @@ export class TaskDetailsComponent implements OnInit {
           severity: 'error',
           summary: 'Error',
           detail: 'Failed to download document'
+        });
+      }
+    });
+  }
+
+  deleteDocument(docId: number): void {
+    if (confirm('Are you sure you want to delete this document?')) {
+      this.documentService.deleteDocument(docId).subscribe({
+        next: (response) => {
+          if (response.succeeded) {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Document deleted successfully'
+            });
+            this.loadDocuments();
+          }
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to delete document'
+          });
+        }
+      });
+    }
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  openReviewDialog(document: any): void {
+    this.selectedDocumentForReview = document;
+    this.reviewStatus = 0;
+    this.reviewComments = '';
+    this.displayReviewDialog = true;
+  }
+
+  submitReview(): void {
+    if (this.reviewStatus === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Warning',
+        detail: 'Please select a review status'
+      });
+      return;
+    }
+
+    if (this.reviewStatus === 2 && !this.reviewComments.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Warning',
+        detail: 'Comments are required when rejecting a document'
+      });
+      return;
+    }
+
+    const currentUser = this.authService.getCurrentUser();
+    const reviewDto = {
+      status: this.reviewStatus,
+      comments: this.reviewComments,
+      reviewedBy: currentUser?.userId || 0
+    };
+
+    this.documentService.reviewDocument(
+      this.selectedDocumentForReview.id,
+      reviewDto
+    ).subscribe({
+      next: (response) => {
+        if (response.succeeded) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Document reviewed successfully'
+          });
+          this.displayReviewDialog = false;
+          this.loadDocuments();
+        }
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to review document'
         });
       }
     });

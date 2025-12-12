@@ -128,11 +128,15 @@
             <div class="activity-list">
                 <div *ngFor="let activity of dashboardData.recentActivity" class="activity-item">
                     <div class="activity-content">
-                        <h4>{{ activity.type }}</h4>
+                        <h4>{{ activity.type | splitCamelCase }}</h4>
                         <p>{{ activity.message }}</p>
+                        <div *ngIf="activity.comments" class="activity-comments">
+                            <i class="pi pi-comment"></i>
+                            <span>{{ activity.comments }}</span>
+                        </div>
                         <small>{{ activity.date | date: 'short' }}</small>
                     </div>
-                    <p-tag [value]="activity.type" [severity]="getSeverity(activity.severity)">
+                    <p-tag [value]="activity.type | splitCamelCase" [severity]="getSeverity(activity.severity)">
                     </p-tag>
                 </div>
             </div>

@@ -24,6 +24,7 @@ export interface DashboardData {
         message: string;
         date: string;
         severity: string;
+        comments?: string; // Optional: HR review comments
     }>;
     upcomingDeadlines: Array<{
         taskId: number;

@@ -286,7 +286,7 @@ export class UserManagementComponent implements OnInit {
     if (this.editingUser) {
       const updateData: UpdateUserDto = this.userForm.value;
       delete (updateData as any).password;
-      
+
       this.adminService.updateUser(this.editingUser.userId, updateData).subscribe({
         next: (response) => {
           if (response.succeeded) {
@@ -406,9 +406,10 @@ export class UserManagementComponent implements OnInit {
   }
 
   getRoleSeverity(role: number): 'success' | 'info' | 'warn' | 'danger' | null | undefined {
-    if (role === 2) return 'danger';
-    if (role === 0) return 'info';
-    return 'success';
+    if (role === 1) return 'danger';    // Admin - Red
+    if (role === 2) return 'warn';      // HR - Orange
+    if (role === 3) return 'success';   // Employee - Green
+    return 'info';
   }
 }
 
