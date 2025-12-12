@@ -34,8 +34,8 @@
   <!-- Sidebar Navigation -->
   <aside class="app-sidebar" [class.collapsed]="sidebarCollapsed">
     <nav class="sidebar-nav">
-      <!-- Admin Menu -->
-      <ng-container *ngIf="isAdmin">
+      <!-- Admin/HR Menu (Role 1) -->
+      <ng-container *ngIf="isHR || isAdmin">
         <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
           <i class="pi pi-home"></i>
           <span>Dashboard</span>
@@ -74,39 +74,7 @@
         </a>
       </ng-container>
 
-      <!-- HR Menu -->
-      <ng-container *ngIf="isHR && !isAdmin">
-        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
-          <i class="pi pi-home"></i>
-          <span>Dashboard</span>
-        </a>
-        <a routerLink="/employees" routerLinkActive="active" class="nav-link">
-          <i class="pi pi-users"></i>
-          <span>Employees</span>
-        </a>
-        <a routerLink="/tasks" routerLinkActive="active" class="nav-link">
-          <i class="pi pi-list"></i>
-          <span>Tasks</span>
-        </a>
-        <a routerLink="/task-templates" routerLinkActive="active" class="nav-link">
-          <i class="pi pi-file"></i>
-          <span>Task Templates</span>
-        </a>
-        <a routerLink="/documents" routerLinkActive="active" class="nav-link">
-          <i class="pi pi-folder"></i>
-          <span>Documents</span>
-        </a>
-        <a routerLink="/overdue-tasks" routerLinkActive="active" class="nav-link">
-          <i class="pi pi-exclamation-triangle"></i>
-          <span>Overdue Tasks</span>
-        </a>
-        <a routerLink="/reports" routerLinkActive="active" class="nav-link">
-          <i class="pi pi-chart-bar"></i>
-          <span>Reports</span>
-        </a>
-      </ng-container>
-
-      <!-- Employee Menu -->
+      <!-- Employee Menu (Role 3) -->
       <ng-container *ngIf="isEmployee">
         <a routerLink="/employee/dashboard" routerLinkActive="active" class="nav-link">
           <i class="pi pi-home"></i>

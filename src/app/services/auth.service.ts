@@ -111,16 +111,15 @@ export class AuthService {
     this.currentUserSubject.next(null);
   }
 
-  // Admin = 1, HR = 2, Employee = 3 (backend enum)
+  // Unified role system: Admin/HR = 1, Employee = 3
   isHR(): boolean {
     const user = this.getCurrentUser();
-    // Allow Admin to access HR features
-    return user?.role === 2 || user?.role === 1;
+    return user?.role === 1;  // Admin/HR unified as role 1
   }
 
   isAdmin(): boolean {
     const user = this.getCurrentUser();
-    return user?.role === 1;
+    return user?.role === 1;  // Same as HR
   }
 
   isEmployee(): boolean {

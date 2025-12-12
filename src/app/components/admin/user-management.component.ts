@@ -196,10 +196,9 @@ export class UserManagementComponent implements OnInit {
   resetPasswordForm: FormGroup;
   selectedUserId: number | null = null;
 
-  // Backend enum: Admin=1, HR=2, Employee=3
+  // Unified role system: Admin/HR=1, Employee=3
   roles = [
-    { label: 'Admin', value: 1 },
-    { label: 'HR', value: 2 },
+    { label: 'Admin/HR', value: 1 },
     { label: 'Employee', value: 3 }
   ];
 
@@ -406,8 +405,7 @@ export class UserManagementComponent implements OnInit {
   }
 
   getRoleSeverity(role: number): 'success' | 'info' | 'warn' | 'danger' | null | undefined {
-    if (role === 1) return 'danger';    // Admin - Red
-    if (role === 2) return 'warn';      // HR - Orange
+    if (role === 1) return 'warn';      // Admin/HR - Orange
     if (role === 3) return 'success';   // Employee - Green
     return 'info';
   }
