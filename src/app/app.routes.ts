@@ -15,44 +15,44 @@ export const routes: Routes = [
     loadComponent: () => import('./components/register/register.component').then(m => m.RegisterComponent),
     canActivate: [loginGuard]
   },
-  // Dashboard (HR/Admin only)
+  // Dashboard (Admin/HR only)
   {
     path: 'dashboard',
     loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: [1, 2] } // Admin=1, HR=2
+    data: { roles: [1] } // Admin/HR unified
   },
-  // Employee Management (HR/Admin only)
+  // Employee Management (Admin/HR only)
   {
     path: 'employees',
     loadComponent: () => import('./components/employees/employee-list.component').then(m => m.EmployeeListComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: [1, 2] }
+    data: { roles: [1] }
   },
   {
     path: 'employees/new',
     loadComponent: () => import('./components/employees/employee-form.component').then(m => m.EmployeeFormComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: [1, 2] }
+    data: { roles: [1] }
   },
   {
     path: 'employees/:id',
     loadComponent: () => import('./components/employees/employee-details.component').then(m => m.EmployeeDetailsComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: [1, 2] }
+    data: { roles: [1] }
   },
   {
     path: 'employees/:id/edit',
     loadComponent: () => import('./components/employees/employee-form.component').then(m => m.EmployeeFormComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: [1, 2] }
+    data: { roles: [1] }
   },
-  // Task Templates (HR/Admin only)
+  // Task Templates (Admin/HR only)
   {
     path: 'task-templates',
     loadComponent: () => import('./components/task-templates/task-template-list.component').then(m => m.TaskTemplateListComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: [1, 2] }
+    data: { roles: [1] }
   },
   // Tasks
   {
@@ -107,21 +107,21 @@ export const routes: Routes = [
     loadComponent: () => import('./components/pdf-viewer/pdf-viewer.component').then(m => m.PdfViewerComponent),
     canActivate: [authGuard]
   },
-  // Overdue Tasks (HR/Admin only)
+  // Overdue Tasks (Admin/HR only)
   {
     path: 'overdue-tasks',
     loadComponent: () => import('./components/tasks/overdue-tasks.component').then(m => m.OverdueTasksComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: [1, 2] }
+    data: { roles: [1] }
   },
-  // Reports (HR/Admin only)
+  // Reports (Admin/HR only)
   {
     path: 'reports',
     loadComponent: () => import('./components/reports/reports.component').then(m => m.ReportsComponent),
     canActivate: [authGuard, roleGuard],
-    data: { roles: [1, 2] }
+    data: { roles: [1] }
   },
-  // Admin Routes (Admin only - Role 2)
+  // Admin Routes (Admin/HR only - Role 1)
   {
     path: 'admin/users',
     loadComponent: () => import('./components/admin/user-management.component').then(m => m.UserManagementComponent),

@@ -39,7 +39,10 @@ import { AdminService, SystemUser, CreateUserDto, UpdateUserDto, ResetPasswordDt
     <div class="user-management-container">
       <div class="header">
         <h1>User & Role Management</h1>
-        <p-button label="Create New User" icon="pi pi-plus" (click)="showCreateDialog()"></p-button>
+        <div class="header-buttons">
+          <p-button label="Add Admin/HR" icon="pi pi-user-plus" severity="warn" (click)="showCreateAdminDialog()"></p-button>
+          <p-button label="Add Employee" icon="pi pi-users" severity="success" (click)="navigateToCreateEmployee()"></p-button>
+        </div>
       </div>
 
       <p-card>
@@ -67,6 +70,7 @@ import { AdminService, SystemUser, CreateUserDto, UpdateUserDto, ResetPasswordDt
               <td>{{ user.email }}</td>
               <td>
                 <p-tag [value]="getRoleName(user.role)" [severity]="getRoleSeverity(user.role)"></p-tag>
+                <small style="display: block; margin-top: 4px; color: #666;">Debug: role={{ user.role }} ({{ typeof user.role }})</small>
               </td>
               <td>
                 <p-tag [value]="user.isActive ? 'Active' : 'Inactive'" 
@@ -88,7 +92,7 @@ import { AdminService, SystemUser, CreateUserDto, UpdateUserDto, ResetPasswordDt
       </p-card>
 
       <!-- Create/Edit User Dialog -->
-      <p-dialog [(visible)]="userDialogVisible" [header]="editingUser ? 'Edit User' : 'Create User'" 
+      <p-dialog [(visible)]="userDialogVisible" [header]="editingUser ? 'Edit User' : 'Create Admin/HR User'" 
                 [modal]="true" [style]="{width: '500px'}" [closable]="true">
         <form [formGroup]="userForm" (ngSubmit)="saveUser()">
           <div class="field mb-3">
@@ -124,10 +128,16 @@ import { AdminService, SystemUser, CreateUserDto, UpdateUserDto, ResetPasswordDt
             </small>
           </div>
 
-          <div class="field mb-3">
+          <div class="field mb-3" *ngIf="editingUser">
             <label>Role *</label>
             <p-select formControlName="role" [options]="roles" optionLabel="label" optionValue="value" 
                      styleClass="w-full"></p-select>
+          </div>
+
+          <div class="field mb-3" *ngIf="!editingUser">
+            <label>Role</label>
+            <input pInputText value="Admin/HR" [disabled]="true" class="w-full" />
+            <small class="text-muted">This user will be created with Admin/HR role</small>
           </div>
 
           <div class="field mb-3" *ngIf="editingUser">
@@ -177,6 +187,10 @@ import { AdminService, SystemUser, CreateUserDto, UpdateUserDto, ResetPasswordDt
       align-items: center;
       margin-bottom: 2rem;
     }
+    .header-buttons {
+      display: flex;
+      gap: 1rem;
+    }
     .field label {
       display: block;
       margin-bottom: 0.5rem;
@@ -196,10 +210,11 @@ export class UserManagementComponent implements OnInit {
   resetPasswordForm: FormGroup;
   selectedUserId: number | null = null;
 
-  // Unified role system: Admin/HR=1, Employee=3
+  // AdminService uses MAPPED values: 0=Admin/HR, 1=Employee
+  // (Database stores 1=AdminHR, 3=Employee, but API returns 0 and 1)
   roles = [
-    { label: 'Admin/HR', value: 1 },
-    { label: 'Employee', value: 3 }
+    { label: 'Admin/HR', value: 0 },
+    { label: 'Employee', value: 1 }
   ];
 
   statusOptions = [
@@ -241,6 +256,13 @@ export class UserManagementComponent implements OnInit {
         if (response.succeeded && response.data) {
           this.users = response.data;
           this.totalRecords = response.totalRecords || 0;
+
+          // Debug: Log actual role values from backend
+          console.log('Users from backend:', this.users.map(u => ({
+            email: u.email,
+            role: u.role,
+            roleType: typeof u.role
+          })));
         }
         this.loading = false;
       },
@@ -255,17 +277,29 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  showCreateDialog(): void {
+  showCreateAdminDialog(): void {
     this.editingUser = null;
     this.userForm.reset({
-      role: 1,
+      role: 0,  // Admin/HR (mapped value for AdminService)
       isActive: true
     });
     this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(8)]);
     this.userDialogVisible = true;
   }
 
+  navigateToCreateEmployee(): void {
+    // Navigate to employee creation page
+    window.location.href = '/employees/new';
+  }
+
   editUser(user: SystemUser): void {
+    // If Employee (role 1 in mapped values), navigate to employee edit page
+    if (user.role === 1 && user.employeeId) {
+      window.location.href = `/employees/${user.employeeId}/edit`;  // Use employeeId
+      return;
+    }
+
+    // If Admin/HR (role 0), show dialog
     this.editingUser = user;
     this.userForm.patchValue({
       firstName: user.firstName,
@@ -276,6 +310,14 @@ export class UserManagementComponent implements OnInit {
     });
     this.userForm.get('password')?.clearValidators();
     this.userForm.get('password')?.updateValueAndValidity();
+
+    // Disable role dropdown for Admin/HR users (they should stay Admin/HR)
+    if (user.role === 0) {
+      this.userForm.get('role')?.disable();
+    } else {
+      this.userForm.get('role')?.enable();
+    }
+
     this.userDialogVisible = true;
   }
 
@@ -283,7 +325,8 @@ export class UserManagementComponent implements OnInit {
     if (this.userForm.invalid) return;
 
     if (this.editingUser) {
-      const updateData: UpdateUserDto = this.userForm.value;
+      // Use getRawValue() to include disabled fields (like role for Admin/HR)
+      const updateData: UpdateUserDto = this.userForm.getRawValue();
       delete (updateData as any).password;
 
       this.adminService.updateUser(this.editingUser.userId, updateData).subscribe({
@@ -401,12 +444,25 @@ export class UserManagementComponent implements OnInit {
   }
 
   getRoleName(role: number): string {
-    return this.roles.find(r => r.value === role)?.label || 'Unknown';
+    // AdminService returns MAPPED values (not database values)
+    // Database: 1=AdminHR, 3=Employee
+    // API Response: 0=Admin/HR, 1=Employee
+    const roleNum = typeof role === 'string' ? parseInt(role) : role;
+
+    if (roleNum === 0) return 'Admin/HR';  // Mapped from database 1
+    if (roleNum === 1) return 'Employee';  // Mapped from database 3
+
+    console.warn('Unknown role value:', role, 'type:', typeof role);
+    return 'Unknown';
   }
 
   getRoleSeverity(role: number): 'success' | 'info' | 'warn' | 'danger' | null | undefined {
-    if (role === 1) return 'warn';      // Admin/HR - Orange
-    if (role === 3) return 'success';   // Employee - Green
+    const roleNum = typeof role === 'string' ? parseInt(role) : role;
+
+    // AdminService mapped values
+    if (roleNum === 0) return 'warn';      // Admin/HR - Orange
+    if (roleNum === 1) return 'success';   // Employee - Green
+
     return 'info';
   }
 }

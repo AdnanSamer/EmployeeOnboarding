@@ -46,10 +46,10 @@ export class LoginComponent implements OnInit {
     // If already authenticated, redirect based on role
     if (this.authService.isAuthenticated()) {
       const user = this.authService.getCurrentUser();
-      if (user?.role === 0 || user?.role === 2) {
+      if (user?.role === 1) {  // Admin/HR
         this.router.navigate(['/dashboard']);
-      } else {
-        this.router.navigate(['/my-tasks']);
+      } else {  // Employee
+        this.router.navigate(['/employee/dashboard']);
       }
     }
   }
@@ -59,19 +59,17 @@ export class LoginComponent implements OnInit {
       this.isLoading = true;
       this.errorMessage = '';
       const credentials: LoginRequest = this.loginForm.value;
-      
+
       this.authService.login(credentials).subscribe({
         next: (response) => {
           if (response.succeeded) {
             // Redirect based on user role
             const role = response.data.role;
-            // Admin = 1, HR = 2, Employee = 3
-            if (role === 1) { // Admin
+            // Unified role system: AdminHR = 1, Employee = 3
+            if (role === 1) { // Admin/HR
               this.router.navigate(['/dashboard']);
-            } else if (role === 2) { // HR
-              this.router.navigate(['/dashboard']);
-            } else { // Employee
-              this.router.navigate(['/my-tasks']);
+            } else { // Employee (role 3)
+              this.router.navigate(['/employee/dashboard']);
             }
           } else {
             this.errorMessage = response.message || 'Login failed';

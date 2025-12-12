@@ -23,10 +23,11 @@ export interface PagedResponse<T> {
 // User Management
 export interface SystemUser {
   userId: number;
+  employeeId?: number;  // Added by backend - populated for Employee users, null for Admin/HR
   email: string;
   firstName: string;
   lastName: string;
-  role: number; // 0=HR, 1=Employee, 2=Admin
+  role: number; // 0=Admin/HR (mapped), 1=Employee (mapped)
   isActive: boolean;
   createdAt: string;
   lastLogin?: string;
@@ -155,18 +156,18 @@ export interface ChartData {
 export class AdminService {
   private apiUrl = `${environment.apiUrl}/Admin`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // User Management
   getUsers(pageNumber: number = 1, pageSize: number = 10, search?: string): Observable<PagedResponse<SystemUser>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
       .set('pageSize', pageSize.toString());
-    
+
     if (search) {
       params = params.set('search', search);
     }
-    
+
     return this.http.get<PagedResponse<SystemUser>>(`${this.apiUrl}/users`, { params });
   }
 
@@ -215,7 +216,7 @@ export class AdminService {
   // Activity Logs
   getActivityLogs(filter: ActivityLogFilter): Observable<PagedResponse<ActivityLog>> {
     let params = new HttpParams();
-    
+
     if (filter.userId) params = params.set('userId', filter.userId.toString());
     if (filter.action) params = params.set('action', filter.action);
     if (filter.entityType) params = params.set('entityType', filter.entityType);
@@ -223,7 +224,7 @@ export class AdminService {
     if (filter.endDate) params = params.set('endDate', filter.endDate);
     if (filter.pageNumber) params = params.set('pageNumber', filter.pageNumber.toString());
     if (filter.pageSize) params = params.set('pageSize', filter.pageSize.toString());
-    
+
     return this.http.get<PagedResponse<ActivityLog>>(`${this.apiUrl}/activity-logs`, { params });
   }
 
