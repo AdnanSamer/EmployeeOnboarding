@@ -84,8 +84,6 @@ export class TaskManagementComponent implements OnInit {
     private messageService: MessageService
   ) {
     this.currentUser = this.authService.getCurrentUser();
-    // If employee (role 3), set their ID to show only their tasks
-    // HR (role 1) and Admin (role 2) will see all tasks
     if (this.currentUser?.role === 3) {
       this.employeeId = this.currentUser.userId;
     }
@@ -117,7 +115,6 @@ export class TaskManagementComponent implements OnInit {
   loadTasks(): void {
     this.loading = true;
     if (this.employeeId) {
-      // Load enhanced tasks for current employee (with overdue info, documents, etc.)
       this.taskService.getEnhancedEmployeeTasks(this.employeeId).subscribe({
         next: (response) => {
           if (response.succeeded && response.data) {
@@ -131,7 +128,6 @@ export class TaskManagementComponent implements OnInit {
         }
       });
     } else {
-      // HR/Admin - load all tasks
       this.taskService.getAllTasks().subscribe({
         next: (response) => {
           if (response.succeeded && response.data) {
@@ -233,7 +229,6 @@ export class TaskManagementComponent implements OnInit {
   }
 
   openStatusDialog(task: OnboardingTask): void {
-    // Check if task is completed (status = 2)
     if (task.status === 2) {
       this.messageService.add({
         severity: 'warn',

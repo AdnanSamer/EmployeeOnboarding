@@ -106,7 +106,6 @@ export class EmployeeSummaryComponent implements OnInit {
     }
 
     downloadPDF(): void {
-        // TODO: Implement PDF download
         console.log('Download PDF summary');
     }
 }

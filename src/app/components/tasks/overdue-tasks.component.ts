@@ -149,7 +149,7 @@ export class OverdueTasksComponent implements OnInit {
   constructor(
     private taskService: TaskService,
     private messageService: MessageService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadOverdueTasks();
@@ -197,7 +197,6 @@ export class OverdueTasksComponent implements OnInit {
       summary: 'Reminder Sent',
       detail: `Reminder sent to ${task.employeeName}`
     });
-    // Backend would handle actual email sending
   }
 }
 

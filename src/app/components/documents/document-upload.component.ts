@@ -52,13 +52,12 @@ export class DocumentUploadComponent implements OnInit {
   displayReviewDialog: boolean = false;
   selectedDocumentForReview: Document | null = null;
   reviewComments: string = '';
-  reviewStatus: number = 0; // 0=Pending, 1=Approved, 2=Rejected
+  reviewStatus: number = 0;
   currentUser: any;
   isHR: boolean = false;
   previewUrl: string | null = null;
   showReviewModal = false;
 
-  // Task dropdown
   tasks: any[] = [];
   selectedTask: any = null;
   loadingTasks: boolean = false;
@@ -71,11 +70,10 @@ export class DocumentUploadComponent implements OnInit {
     private router: Router
   ) {
     this.currentUser = this.authService.getCurrentUser();
-    this.isHR = this.currentUser?.role === 1 || this.currentUser?.role === 2; // HR or Admin
+    this.isHR = this.currentUser?.role === 1 || this.currentUser?.role === 2;
   }
 
   ngOnInit(): void {
-    // Load employee's tasks for dropdown
     this.loadEmployeeTasks();
   }
 
@@ -90,7 +88,6 @@ export class DocumentUploadComponent implements OnInit {
 
     this.loadingTasks = true;
 
-    // HR/Admin load all tasks, Employee loads their own tasks
     const apiCall = this.isHR
       ? this.taskService.getAllTasks()
       : this.taskService.getEnhancedEmployeeTasks(userId);
@@ -148,7 +145,6 @@ export class DocumentUploadComponent implements OnInit {
   onFileSelect(event: any): void {
     const file = event.files?.[0];
     if (file) {
-      // Validate file type
       if (file.type !== 'application/pdf') {
         this.messageService.add({
           severity: 'error',
@@ -158,7 +154,6 @@ export class DocumentUploadComponent implements OnInit {
         return;
       }
 
-      // Validate file size (10MB)
       if (file.size > 10 * 1024 * 1024) {
         this.messageService.add({
           severity: 'error',
@@ -206,11 +201,8 @@ export class DocumentUploadComponent implements OnInit {
             summary: 'Success',
             detail: 'Document uploaded successfully!'
           });
-          // Load documents first before clearing taskId
           this.loadDocuments();
           this.selectedFile = null;
-          // Don't clear taskId so documents stay visible
-          // this.taskId = null;
         } else {
           this.messageService.add({
             severity: 'error',
@@ -250,8 +242,6 @@ export class DocumentUploadComponent implements OnInit {
   }
 
   previewDocument(document: Document): void {
-    // Navigate to PDF viewer with document ID or filename
-    // Use documentId if available, otherwise use fileName
     if (document.id) {
       this.router.navigate(['/pdf-viewer'], {
         queryParams: {
@@ -268,18 +258,16 @@ export class DocumentUploadComponent implements OnInit {
   openReviewDialog(document: Document): void {
     this.selectedDocumentForReview = document;
     this.reviewComments = '';
-    // Map status: 0=Pending, 1=Approved, 2=Rejected
     const statusValue = typeof document.status === 'string'
       ? (document.status === 'Approved' ? 1 : document.status === 'Rejected' ? 2 : 0)
       : document.status;
-    this.reviewStatus = statusValue === 0 ? 1 : statusValue; // Default to Approve if pending
+    this.reviewStatus = statusValue === 0 ? 1 : statusValue;
     this.displayReviewDialog = true;
   }
 
   submitReview(): void {
     if (!this.selectedDocumentForReview) return;
 
-    // Validate: comments required if rejecting
     if (this.reviewStatus === 2 && !this.reviewComments.trim()) {
       this.messageService.add({
         severity: 'warn',
@@ -300,7 +288,7 @@ export class DocumentUploadComponent implements OnInit {
     }
 
     this.documentService.reviewDocument(this.selectedDocumentForReview.id, {
-      status: this.reviewStatus, // 1=Approved, 2=Rejected
+      status: this.reviewStatus,
       comments: this.reviewComments,
       reviewedBy: user.userId || 0
     }).subscribe({

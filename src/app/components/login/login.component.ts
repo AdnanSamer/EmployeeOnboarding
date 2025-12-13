@@ -43,12 +43,11 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // If already authenticated, redirect based on role
     if (this.authService.isAuthenticated()) {
       const user = this.authService.getCurrentUser();
-      if (user?.role === 1) {  // Admin/HR
+      if (user?.role === 1) {
         this.router.navigate(['/dashboard']);
-      } else {  // Employee
+      } else {
         this.router.navigate(['/employee/dashboard']);
       }
     }
@@ -63,12 +62,10 @@ export class LoginComponent implements OnInit {
       this.authService.login(credentials).subscribe({
         next: (response) => {
           if (response.succeeded) {
-            // Redirect based on user role
             const role = response.data.role;
-            // Unified role system: AdminHR = 1, Employee = 3
-            if (role === 1) { // Admin/HR
+            if (role === 1) {
               this.router.navigate(['/dashboard']);
-            } else { // Employee (role 3)
+            } else {
               this.router.navigate(['/employee/dashboard']);
             }
           } else {

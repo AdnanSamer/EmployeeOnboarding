@@ -33,8 +33,7 @@ export class DashboardComponent implements OnInit {
   statsError: string | null = null;
   progressError: string | null = null;
   isAdmin: boolean = false;
-  
-  // Admin-specific data
+
   onboardingChartData: any = null;
   taskCompletionChartData: any = null;
   fileUploadsChartData: any = null;
@@ -59,7 +58,7 @@ export class DashboardComponent implements OnInit {
 
   loadDashboardData(): void {
     this.loading = true;
-    
+
     this.dashboardService.getStats().subscribe({
       next: (response) => {
         console.log('Dashboard Stats Response:', response);
@@ -67,7 +66,6 @@ export class DashboardComponent implements OnInit {
           this.stats = response.data;
         } else {
           console.warn('Stats response not successful:', response.message || 'Unknown error');
-          // Initialize with zeros if API fails
           this.stats = {
             totalEmployees: 0,
             activeOnboarding: 0,
@@ -88,8 +86,7 @@ export class DashboardComponent implements OnInit {
           url: error.url,
           error: error.error
         });
-        
-        // Set error message for user
+
         if (error.status === 500) {
           this.statsError = 'Backend server error. Please check backend logs.';
         } else if (error.status === 404) {
@@ -97,8 +94,7 @@ export class DashboardComponent implements OnInit {
         } else {
           this.statsError = `Failed to load statistics: ${error.statusText || 'Unknown error'}`;
         }
-        
-        // Initialize with zeros on error
+
         this.stats = {
           totalEmployees: 0,
           activeOnboarding: 0,
@@ -130,7 +126,7 @@ export class DashboardComponent implements OnInit {
           url: error.url,
           error: error.error
         });
-        
+
         if (error.status === 500) {
           this.progressError = 'Backend server error. Please check backend logs.';
         } else if (error.status === 404) {
@@ -138,14 +134,13 @@ export class DashboardComponent implements OnInit {
         } else {
           this.progressError = `Failed to load progress: ${error.statusText || 'Unknown error'}`;
         }
-        
+
         this.progress = [];
       }
     });
   }
 
   loadAdminDashboardData(): void {
-    // Load charts
     this.adminService.getOnboardingProgressChart().subscribe({
       next: (response) => {
         if (response.succeeded && response.data) {
@@ -173,7 +168,6 @@ export class DashboardComponent implements OnInit {
       error: (error) => console.error('Error loading file uploads chart:', error)
     });
 
-    // Load alerts
     this.adminService.getOverdueTasks().subscribe({
       next: (response) => {
         if (response.succeeded && response.data) {

@@ -69,8 +69,7 @@ import { AdminService, SystemUser, CreateUserDto, UpdateUserDto, ResetPasswordDt
               <td>{{ user.firstName }} {{ user.lastName }}</td>
               <td>{{ user.email }}</td>
               <td>
-                <p-tag [value]="getRoleName(user.role)" [severity]="getRoleSeverity(user.role)"></p-tag>
-                <small style="display: block; margin-top: 4px; color: #666;">Debug: role={{ user.role }} ({{ typeof user.role }})</small>
+                <p-tag [value]="getRoleName(user.role)" [severity]="getRoleSeverity(user.role)"></p-tag>              
               </td>
               <td>
                 <p-tag [value]="user.isActive ? 'Active' : 'Inactive'" 
